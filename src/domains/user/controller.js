@@ -1,5 +1,36 @@
 const User = require("./model");
-const { hashData } = require("./../../util/hashData");
+const { hashData, verifyHashedData } = require("./../../util/hashData");
+const createToken = require("./../../util/createToken");
+
+const authenticateUser = async (data) => {
+  try {
+    const { email, password } = data;
+
+    const fetchedUser = await User.findOne({
+      email
+    });
+
+    if (!fetchedUser) {
+      throw Error("Email provided is invalid!")
+    }
+
+    const hashedPassword = fetchedUser.password;
+    const passwordMatch = await verifyHashedData(password, hashedPassword);
+
+    if (!passwordMatch) {
+      throw Error("Invalid password!");
+    }
+
+    const tokenData = { userId: fetchedUser._id, email}
+    const token = await createToken(tokenData);
+
+    fetchedUser.token = token;
+    return fetchedUser;
+
+  } catch (error) {
+    throw error;
+  }
+};
 
 const createNewUser = async (data) => {
   try {
@@ -30,4 +61,4 @@ const createNewUser = async (data) => {
   }
 };
 
-module.exports = { createNewUser };
+module.exports = { createNewUser, authenticateUser };
