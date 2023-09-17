@@ -8,7 +8,8 @@ const { sendOTP, verifyOTP, deleteOTP } = require("./../otp/controller");
     if(!validOTP) {
       throw Error("Invalid code! Please check your inbox and try again");
     }
-
+    //update user record to verify email
+    await User.updateOne({ email }, { verified: true });
     await deleteOTP(email);
     return;
   } catch (error) {
