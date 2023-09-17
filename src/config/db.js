@@ -18,3 +18,5 @@ const connectToDB = async () => {
 }
 
 connectToDB();
+
+//https://www.youtube.com/watch?v=TFWuG4qTqIE part9 left off
