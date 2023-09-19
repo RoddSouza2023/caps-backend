@@ -15,8 +15,8 @@ router.get("/private_data", auth, (req,res) => {
 router.post("/", async (req, res) => {
   try {
     let { email, password } = req.body;
-    email = email.trim();
-    password = password.trim();
+    // email = email.trim();
+    // password = password.trim();
 
     if(!(email && password)) {
       throw Error("Empty credentials supplied!");
