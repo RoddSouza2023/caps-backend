@@ -2,13 +2,14 @@ const OTP = require("./model");
 const generateOTP = require("./../../util/generateOTP");
 const sendEmail = require("./../../util/sendEmail");
 const { hashData, verifyHashedData } = require("./../../util/hashData");
+const { sendVerificationOTPEmail } = require('./../email_verification/controller')
 const { AUTH_EMAIL } = process.env;
 
 //verification function
 const verifyOTP = async ({ email, otp }) => {
   try {
     if (!(email && otp)) {
-      throw Error("Provide values fro email, otp");
+      throw Error("Provide values for email, otp");
     }
 
     //check if otp request exists for user
@@ -17,6 +18,7 @@ const verifyOTP = async ({ email, otp }) => {
     });
     
     if (!matchedOTPRecord) {
+      sendVerificationOTPEmail(email);
       throw Error("No otp request found");
     }
 
@@ -28,7 +30,7 @@ const verifyOTP = async ({ email, otp }) => {
         email,
       });
 
-      throw Error("Code has expired. Request for a new one.");
+      throw Error("Code has expired. Please check your inbox.");
     }
 
     //not expired, verify value
