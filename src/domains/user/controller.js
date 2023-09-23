@@ -9,6 +9,7 @@ const authenticateUser = async (data) => {
     let response = {
       success: false,
     };
+    
     //look for user in database
     const fetchedUser = await User.findOne(
       { email: { $regex: new RegExp(email, 'i') } }

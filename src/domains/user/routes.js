@@ -4,6 +4,7 @@ const { createNewUser, authenticateUser } = require("./controller");
 const auth = require("./../../middleware/auth");
 const { sendVerificationOTPEmail } = require("./../email_verification/controller");
 const User = require('./model');
+const jwt = require('jsonwebtoken');
 
 //protected route
 router.get("/private_data", auth, (req,res) => {
@@ -36,15 +37,19 @@ router.post("/", async (req, res) => {
     
     const authenticadteUser = await authenticateUser({ email, password });
 
-    const token = authenticadteUser.user.token;
-
-    res.cookie("token", token, {
-      path: "/",
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true,
-    });
-
+    
     if (authenticadteUser.success) {
+      const token = authenticadteUser.user.token;
+      
+      //pass token to cookie
+      res.cookie("token", token, {
+        path: "/",
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: false,
+        secure: true,
+      });
+
       response.success = true;
       response['message'] = "Successful login!";
       response['user'] = authenticadteUser.user;
@@ -61,20 +66,30 @@ router.post("/", async (req, res) => {
 
 //auto sign in
 router.get("/autoLogin", (req, res) => {
-  const cookie = req.headers.cookie;
+  const token = req.headers.cookie;
 
-  if (!cookie) {
-    res.sendStatus(401);
+  let response = {
+    success: false,
+  };
+
+  if (token === 'token=j%3Anull' || !token) {
+    res.status(401).json(response);
+  } else {
+    response['success'] = true;
+    response.token = token?.substring(6);
+    res.json(response);
   }
-
-  res.sendStatus(200);
 });
 
 //logout
 router.get("/logout", (req, res) => {
-  res.clear("token");
-
-  return res.sendStatus(200);
+  try {
+    res.clearCookie('token');
+  
+    res.send({logoutSuccess: true});
+  } catch (error) {
+    res.send(error.message);
+  }
 });
 
 //SignUp
