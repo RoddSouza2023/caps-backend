@@ -16,7 +16,7 @@ router.use("/game", gameRoutes);
 
 router.use(express.json());
 router.use(cors({
-  origin: "http://localhost",
+  origin: "https://gamestore-twj1.onrender.com/api/v1",
   credentials: true,
   allowedHeaders: [
     "set-cookie",
