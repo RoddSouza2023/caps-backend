@@ -12,14 +12,20 @@ const verifyOTP = async ({ email, otp }) => {
       throw Error("Provide values for email, otp");
     }
 
+    let response = {
+      success: false,
+      error: false,
+    }
+
     //check if otp request exists for user
     const matchedOTPRecord = await OTP.findOne({
       email,
     });
     
     if (!matchedOTPRecord) {
-      sendVerificationOTPEmail(email);
-      throw Error("No otp request found");
+      // sendVerificationOTPEmail(email);
+      response.error = "No previous otp request found for email. Please check your inbox and try again.";
+      return response;
     }
 
     const { expiresAt } = matchedOTPRecord;
@@ -29,15 +35,16 @@ const verifyOTP = async ({ email, otp }) => {
       await OTP.deleteOne({
         email,
       });
-
-      throw Error("Code has expired. Please check your inbox.");
+      response.error = "Code has expired. Please request a new one.";
+      return response;
     }
 
     //not expired, verify value
     const hashedOTP = matchedOTPRecord.otp;
     const validOTP = await verifyHashedData(otp, hashedOTP);
+    response.success = validOTP;
 
-    return validOTP;
+    return response;
   } catch (error) {
     throw error;
   }

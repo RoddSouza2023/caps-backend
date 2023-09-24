@@ -8,6 +8,7 @@ const UserSchema = new Schema({
   password: String,
   token: String,
   verified: { type: Boolean, default: false },
+  cart: Array,
 });
 
 

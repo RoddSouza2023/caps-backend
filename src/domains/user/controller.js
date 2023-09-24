@@ -12,7 +12,7 @@ const authenticateUser = async (data) => {
     
     //look for user in database
     const fetchedUser = await User.findOne(
-      { email: { $regex: new RegExp(email, 'i') } }
+      { email }
     )
 
     if (!fetchedUser) {
@@ -22,6 +22,7 @@ const authenticateUser = async (data) => {
 
     //check if email has been verified
     if (!fetchedUser.verified) {
+      response["user"] = fetchedUser;
       response["error"] = "Email hasn't been verified. Please check your inbox";
       return response;
     }

@@ -1,17 +1,28 @@
 const User = require("./../user/model");
 const { sendOTP, verifyOTP, deleteOTP } = require("./../otp/controller");
 
- const verifyUserEmail = async ({ email, top }) => {
+ const verifyUserEmail = async ({ email, otp }) => {
   try {
+
+    let response = {
+      success: false,
+      error: false,
+    }
+
     const validOTP = await verifyOTP({ email, otp });
 
-    if(!validOTP) {
-      throw Error("Invalid code! Please check your inbox and try again");
+    if(!validOTP.success) {
+      response.error = validOTP.error;
     }
+
     //update user record to verify email
     await User.updateOne({ email }, { verified: true });
     await deleteOTP(email);
-    return;
+
+    response.success = true,
+    response['message'] = "Email successfully confirmed!";
+
+    return response;
   } catch (error) {
     throw error;
   }

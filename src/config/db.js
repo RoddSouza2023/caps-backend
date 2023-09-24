@@ -2,7 +2,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 
 //uri
-const { MONGODB_URI } = process.env;
+const { MONGODB_URI, PORT } = process.env;
 
 const connectToDB = async () => {
   try {
@@ -10,7 +10,7 @@ const connectToDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology :true,
     });
-    console.log("Database Connected");
+    console.log("Database Connected on PORT: " + PORT);
   } catch (error) {
     console.log(error);
   }

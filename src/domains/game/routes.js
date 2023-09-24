@@ -59,4 +59,32 @@ router.get("/all", async (req, res)=>{
   res.status(200).json(response);
 });
 
+//get game by slug
+router.get("/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    console.log(slug);
+  
+    let response = {
+      success: false,
+      error: false,
+      game: {},
+    }
+  
+    const game = await Game.findOne({ slug });
+  
+    if (!game) {
+      response.error = "Problem retrieving game data";
+      res.status(404).json(response);
+      return;
+    }
+  
+    response.game = game;
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+});
+
 module.exports = router;
