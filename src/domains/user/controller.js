@@ -31,7 +31,7 @@ const authenticateUser = async (data) => {
     const hashedPassword = fetchedUser.password;
     const passwordMatch = await verifyHashedData(password, hashedPassword);
     if (!passwordMatch) {
-      response["error"] = "Invalid password! Try again or reset password";
+      response["error"] = "Invalid password! Passwords are case sensitive";
       return response;
     }
 
