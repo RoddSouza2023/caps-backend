@@ -30,7 +30,6 @@ const authenticateUser = async (data) => {
     //verify password matches data in profile
     const hashedPassword = fetchedUser.password;
     const passwordMatch = await verifyHashedData(password, hashedPassword);
-
     if (!passwordMatch) {
       response["error"] = "Invalid password! Try again or reset password";
       return response;

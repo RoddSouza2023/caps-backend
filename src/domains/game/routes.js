@@ -63,8 +63,6 @@ router.get("/all", async (req, res)=>{
 router.get("/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-
-    console.log(slug);
   
     let response = {
       success: false,

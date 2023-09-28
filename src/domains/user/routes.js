@@ -5,6 +5,7 @@ const auth = require("./../../middleware/auth");
 const { sendVerificationOTPEmail } = require("./../email_verification/controller");
 const jwt_decoder = require('jwt-decode');
 const User = require('./model');
+const { hashData } = require("../../util/hashData");
 
 //protected route
 router.get("/private_data", auth, (req,res) => {
@@ -112,6 +113,93 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+//get user profile/details
+router.post("/get_user_details", auth, async (req, res) => {
+  try {
+    let response = {
+      success: false,
+      error: false,
+    }
+
+    const { token } = req.body;
+
+    const { userId } = jwt_decoder(token);
+    const fetchedUser = await User.findOne({ _id: userId });
+
+    if (!fetchedUser) {
+      response.error = "No user data found";
+      res.status(404).json(response);
+      return;
+    }
+
+    const { name, email } = fetchedUser;
+
+    response.success = true;
+    //set up data sent on request
+    response["userDetails"] = { name: name, email: email};
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+});
+
+//change user password
+router.post("/change_password", auth, async (req, res) => {
+  try {
+    let response = {
+      success: false,
+      error: false,
+    }
+
+    const { token, currentPassword, newPassword } = req.body;
+
+    if (newPassword.length < 8) {
+      response.error = "Password must be at least 8 characters";
+      res.status(409).json(response);
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      response.error = "New password must be different than current";
+      res.status(409).json(response);
+      return;
+    }
+
+    const { userId } = jwt_decoder(token);
+    const fetchedUser = await User.findOne({ _id: userId });
+
+    if (!fetchedUser) {
+      response.error = "No user data found";
+      res.status(404).json(response);
+      return;
+    }
+
+    const userRequest = {
+      email: fetchedUser.email,
+      password: currentPassword,
+    }
+
+    const matchedUserPassword = await authenticateUser(userRequest);
+
+    if(!matchedUserPassword.success) {
+      response.error = "Current password doesn't match profile. Passwords are case sensitive.";
+      res.status(409).json(response);
+      return;
+    }
+
+    const newHashedPassword = await hashData(newPassword);
+    await User.updateOne({ _id: userId}, { $set: {password: newHashedPassword }});
+
+    response.success = true;
+    response["message"] = "Password updated successfully";
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+});
+
+//USER CART METHODS *************************
+
 //Add items to cart
 router.patch("/cart", async (req, res) => {
   try {
@@ -190,6 +278,45 @@ router.patch("/cart/item_quantity", async (req, res) => {
     response.success = true;
     response["message"] = "Quantity updated successfully";
     response["server_response"] = serverResponse;
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+});
+
+//remove all items from cart 
+router.patch("/remove_all_cart", async (req, res) => {
+  try {
+    let response = {
+      success: false,
+      error: false,
+      removedItems: [],
+    }
+
+    const token = req.body.token;
+
+    const { userId } = jwt_decoder(token);
+
+    const itemsRemoved = await User.findById({ _id: userId });
+
+    if (!itemsRemoved) {
+      response.error = "Failed to find user in Database";
+      res.status(404).json(response);
+      return;
+    }
+
+    response.removedItems = itemsRemoved.cart;
+
+    const serverResponse = await User.updateOne({ _id: userId }, { $set: { "cart" : [] } });
+
+    if (!serverResponse) {
+      response.error = "Failed to complete request";
+      res.status(500).json(response);
+      return;
+    }
+
+    response.serverResponse = serverResponse;
+    response.success = true;
     res.status(200).json(response);
   } catch (error) {
     res.status(400).send(error.message);

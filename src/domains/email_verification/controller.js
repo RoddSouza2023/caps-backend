@@ -13,6 +13,7 @@ const { sendOTP, verifyOTP, deleteOTP } = require("./../otp/controller");
 
     if(!validOTP.success) {
       response.error = validOTP.error;
+      return response;
     }
 
     //update user record to verify email
@@ -20,7 +21,7 @@ const { sendOTP, verifyOTP, deleteOTP } = require("./../otp/controller");
     await deleteOTP(email);
 
     response.success = true,
-    response['message'] = "Email successfully confirmed!";
+    response['message'] = "Email successfully confirmed! Procced to login.";
 
     return response;
   } catch (error) {

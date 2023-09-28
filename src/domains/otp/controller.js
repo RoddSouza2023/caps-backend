@@ -24,7 +24,7 @@ const verifyOTP = async ({ email, otp }) => {
     
     if (!matchedOTPRecord) {
       // sendVerificationOTPEmail(email);
-      response.error = "No previous otp request found for email. Please check your inbox and try again.";
+      response.error = "No previous otp request found for email. Please request new code.";
       return response;
     }
 
@@ -42,6 +42,12 @@ const verifyOTP = async ({ email, otp }) => {
     //not expired, verify value
     const hashedOTP = matchedOTPRecord.otp;
     const validOTP = await verifyHashedData(otp, hashedOTP);
+
+    if (!validOTP) {
+      response.error = "Invalid OTP code. Please verify code matches the one in email.";
+      return response;
+    }
+    
     response.success = validOTP;
 
     return response;
