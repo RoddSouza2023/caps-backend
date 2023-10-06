@@ -17,10 +17,15 @@ router.post("/", async (req, res) => {
 
 //filter data provided
 router.get("/all", async (req, res)=>{
+  let response = {
+    success: false,
+    error: false,
+  }
+
   let gameQuery = {};
 
+  //verify valid query options and implement to gameQuery object
   const { genres, platforms, ordering, search } = req.query;
-
   if (genres) { 
     gameQuery["genres.id"] = +genres;
   }
@@ -33,28 +38,27 @@ router.get("/all", async (req, res)=>{
     gameQuery = {};
     gameQuery["name"] = { $regex: new RegExp(search, 'i') };
   }
+  //set up the number of documents that are skipped and the limit of documents retrieved
   
   let games;
 
   if (ordering) { 
     let order = 1;
     let criteria = ordering;
-
+    //check if order is reversed from greatest to least
     if (ordering[0] === '-') {
       order = -1;
       criteria = ordering.substring(1);
     }
-
+    //dynamic criteria key
     let sortObject = { [criteria]: order };
     games = await Game.find().sort(sortObject);
-  } else {
-    games = await Game.find(gameQuery);
   }
 
+  games = await Game.find(gameQuery);
 
-  const response = {
-    games: games,
-  }
+  response.success = true;
+  response["games"] = games || [];
 
   res.status(200).json(response);
 });

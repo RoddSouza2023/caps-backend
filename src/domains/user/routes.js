@@ -201,7 +201,7 @@ router.post("/change_password", auth, async (req, res) => {
 //USER CART METHODS *************************
 
 //Add items to cart
-router.patch("/cart", async (req, res) => {
+router.patch("/cart/add", async (req, res) => {
   try {
 
     let response = {
@@ -324,7 +324,7 @@ router.patch("/remove_all_cart", async (req, res) => {
 });
 
 //remove item from cart
-router.delete("/cart", async (req, res) => {
+router.patch("/cart/remove", async (req, res) => {
   try {
     let response = {
       success: false,
