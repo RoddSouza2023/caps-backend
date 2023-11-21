@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-//filter data provided
+//filter data provided, getting all games
 router.get("/all", async (req, res)=>{
   let response = {
     success: false,
@@ -53,9 +53,9 @@ router.get("/all", async (req, res)=>{
     //dynamic criteria key
     let sortObject = { [criteria]: order };
     games = await Game.find().sort(sortObject);
+  } else {
+    games = await Game.find(gameQuery);
   }
-
-  games = await Game.find(gameQuery);
 
   response.success = true;
   response["games"] = games || [];
