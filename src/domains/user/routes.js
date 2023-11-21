@@ -6,6 +6,7 @@ const { sendVerificationOTPEmail } = require("./../email_verification/controller
 const jwt_decoder = require('jwt-decode');
 const User = require('./model');
 const { hashData } = require("../../util/hashData");
+const emailValidator = require('deep-email-validator');
 
 //protected route
 router.get("/private_data", auth, (req,res) => {
@@ -62,15 +63,26 @@ router.post("/", async (req, res) => {
 //SignUp
 router.post("/signup", async (req, res) => {
   try {
-    let { name, email, password } = req.body;
-    email = email.toLowerCase();
-
-    const fetchedUser = await User.findOne({ email });
 
     let response = {
       success: false,
       error: false,
     }
+
+    let { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      response.success = false;
+      response.error = 'Please fill out all fields!';
+      res.status(403).json(response);
+      return;
+    }
+    //use deep validator to see if email is valid 
+    const validated = await emailValidator.validate(email);
+
+    email = email.toLowerCase();
+
+    const fetchedUser = await User.findOne({ email });
     
     if (fetchedUser) {
       response.error = "Email already on file. Please login or reset password."
@@ -88,10 +100,16 @@ router.post("/signup", async (req, res) => {
 
       if (!/^[a-zA-Z ]*$/.test(name)) {
         response.error = "Invalid name entered";
-      } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+        res.status(400).json(response);
+        return;
+      } else if (!validated.valid) {
         response.error = "Invalid email entered";
+        res.status(400).json(response);
+        return;
       } else if (password.length < 8) {
         response.error = "Password is too short";
+        res.status(400).json(response);
+        return;
       } else {
         //conditions met, create user
         const newUser = await createNewUser({
@@ -152,6 +170,12 @@ router.post("/change_password", auth, async (req, res) => {
     }
 
     const { token, currentPassword, newPassword } = req.body;
+
+    if (!newPassword || !currentPassword) {
+      response.error = "Please fill out all fields!";
+      res.status(400).json(response);
+      return;
+    }
 
     if (newPassword.length < 8) {
       response.error = "Password must be at least 8 characters";
